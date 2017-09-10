@@ -1,0 +1,81 @@
+--- /var/www/wordpress/wp-content/plugins/wired-impact-volunteer-management/frontend/class-public.php
++++ /var/www/wordpress/wp-content/plugins/wired-impact-volunteer-management-cdh/frontend/class-public.php
+@@ -110,6 +110,7 @@
+ 	 *
+ 	 * Register our Volunteer Opportunities post type and set the method to static so that 
+ 	 * it can be called during activation when we need to refresh the rewrite rules.
++	 * CDH: Add taxonomy to post_type array
+ 	 */
+ 	public static function register_post_types(){
+ 
+@@ -136,8 +137,10 @@
+ 	      'show_in_menu'      => 'wi-volunteer-management',
+ 	      'menu_icon'         => 'dashicons-groups',
+ 	      'capability_type'   => 'post',
+-	      'supports'          => array( 'title', 'editor', 'thumbnail', 'revisions'  ),
+-	      'rewrite'           => array( 'slug' => apply_filters( 'wivm_opp_rewrite', 'volunteer-opportunity' ), 'with_front' => false )
++	      'supports'          => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions'  ),
++	      'rewrite'           => array( 'slug' => apply_filters( 'wivm_opp_rewrite', 'volunteer-opportunity' ), 'with_front' => false ),
++	      'taxonomies'	  => array( 'category' ),
++	      'has_archive'       => true,
+ 	    ); 
+ 	    
+ 	    register_post_type( 'volunteer_opp', $args );
+@@ -145,8 +148,12 @@
+ 
+ 	/**
+ 	 * Shortcode for viewing all one-time volunteer opportunities.
+-	 */
+-	public function display_one_time_volunteer_opps(){
++	 * CDH: added category parameter "cat" to shortcode
++	 */
++	public function display_one_time_volunteer_opps($atts){
++	    $atts = shortcode_atts( array(
++            'cat' => ''
++        ), $atts );
+ 		$paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1;
+ 		$args  = array(
+ 			'post_type' => 'volunteer_opp',
+@@ -168,14 +175,24 @@
+ 			),
+ 			'paged' => $paged
+ 		);
+-
++		if (!empty($atts['cat'])) {
++			$args['tax_query'] = array( array(
++                    'taxonomy'  => 'category',
++                    'field'     => 'slug',
++                    'terms'     => array( sanitize_title( $atts['cat'] ) )
++            ) );	
++		}
+ 		return $this->display_volunteer_opp_list( 'one-time', apply_filters( $this->plugin_name . '_one_time_opp_shortcode_query', $args ) );		
+ 	}
+ 
+ 	/**
+ 	 * Shortcode for viewing all flexible volunteer opportunities.
+-	 */
+-	public function display_flexible_volunteer_opps(){
++	 * CDH: added category parameter "cat" to shortcode
++	 */
++	public function display_flexible_volunteer_opps($atts){
++	    $atts = shortcode_atts( array(
++            'cat' => ''
++        ), $atts );
+ 		$paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1;
+ 		$args = array(
+ 			'post_type' => 'volunteer_opp',
+@@ -188,7 +205,13 @@
+ 			),
+ 			'paged' => $paged
+ 		);
+-
++		if (!empty($atts['cat'])) {
++			$args['tax_query'] = array( array(
++                    'taxonomy'  => 'category',
++                    'field'     => 'slug',
++                    'terms'     => array( sanitize_title( $atts['cat'] ) )
++            ) );	
++		}	
+ 		return $this->display_volunteer_opp_list( 'flexible', apply_filters( $this->plugin_name . '_flexible_opp_shortcode_query', $args ) );
+ 	}
+ 
